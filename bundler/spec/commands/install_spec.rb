@@ -545,6 +545,8 @@ RSpec.describe "bundle install with gem sources" do
 
          DEPENDENCIES
 
+         CHECKSUMS
+
          RUBY VERSION
             #{Bundler::RubyVersion.system}
 
@@ -568,6 +570,8 @@ RSpec.describe "bundle install with gem sources" do
            #{lockfile_platforms}
 
          DEPENDENCIES
+
+         CHECKSUMS
 
          RUBY VERSION
             #{Bundler::RubyVersion.system}
@@ -890,16 +894,16 @@ RSpec.describe "bundle install with gem sources" do
   context "with missing platform specific gems in lockfile" do
     before do
       build_repo4 do
-        build_gem "racc", "1.5.2"
+        build_gem "racca", "1.5.2"
 
         build_gem "nokogiri", "1.12.4" do |s|
           s.platform = "x86_64-darwin"
-          s.add_runtime_dependency "racc", "~> 1.4"
+          s.add_runtime_dependency "racca", "~> 1.4"
         end
 
         build_gem "nokogiri", "1.12.4" do |s|
           s.platform = "x86_64-linux"
-          s.add_runtime_dependency "racc", "~> 1.4"
+          s.add_runtime_dependency "racca", "~> 1.4"
         end
 
         build_gem "crass", "1.0.6"
@@ -918,6 +922,13 @@ RSpec.describe "bundle install with gem sources" do
         gem "loofah", "~> 2.12.0"
       G
 
+      checksums = construct_checksum_section do |c|
+        c.repo_gem gem_repo4, "crass", "1.0.6"
+        c.repo_gem gem_repo4, "loofah", "2.12.0"
+        c.repo_gem gem_repo4, "nokogiri", "1.12.4", "x86_64-darwin"
+        c.repo_gem gem_repo4, "racca", "1.5.2"
+      end
+
       lockfile <<-L
         GEM
           remote: https://gem.repo4/
@@ -927,8 +938,8 @@ RSpec.describe "bundle install with gem sources" do
               crass (~> 1.0.2)
               nokogiri (>= 1.5.9)
             nokogiri (1.12.4-x86_64-darwin)
-              racc (~> 1.4)
-            racc (1.5.2)
+              racca (~> 1.4)
+            racca (1.5.2)
 
         PLATFORMS
           x86_64-darwin-20
@@ -936,6 +947,9 @@ RSpec.describe "bundle install with gem sources" do
 
         DEPENDENCIES
           loofah (~> 2.12.0)
+
+        CHECKSUMS
+          #{checksums}
 
         RUBY VERSION
            #{Bundler::RubyVersion.system}
@@ -952,6 +966,14 @@ RSpec.describe "bundle install with gem sources" do
         bundle "install", :artifice => "compact_index"
       end
 
+      expected_checksums = construct_checksum_section do |c|
+        c.repo_gem gem_repo4, "crass", "1.0.6"
+        c.repo_gem gem_repo4, "loofah", "2.12.0"
+        c.repo_gem gem_repo4, "nokogiri", "1.12.4", "x86_64-darwin"
+        c.repo_gem gem_repo4, "nokogiri", "1.12.4", "x86_64-linux"
+        c.repo_gem gem_repo4, "racca", "1.5.2"
+      end
+
       expect(lockfile).to eq <<~L
         GEM
           remote: https://gem.repo4/
@@ -961,10 +983,10 @@ RSpec.describe "bundle install with gem sources" do
               crass (~> 1.0.2)
               nokogiri (>= 1.5.9)
             nokogiri (1.12.4-x86_64-darwin)
-              racc (~> 1.4)
+              racca (~> 1.4)
             nokogiri (1.12.4-x86_64-linux)
-              racc (~> 1.4)
-            racc (1.5.2)
+              racca (~> 1.4)
+            racca (1.5.2)
 
         PLATFORMS
           x86_64-darwin-20
@@ -972,6 +994,9 @@ RSpec.describe "bundle install with gem sources" do
 
         DEPENDENCIES
           loofah (~> 2.12.0)
+
+        CHECKSUMS
+          #{expected_checksums}
 
         RUBY VERSION
            #{Bundler::RubyVersion.system}
